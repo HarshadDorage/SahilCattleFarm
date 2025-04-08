@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CattleAI Pro - Semen Management</title>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        @media (max-width: 640px) {
+            .mobile-stack { flex-direction: column; }
+            .mobile-full { width: 100%; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Login Screen -->
+    <div id="loginScreen" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
+        <div class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full mx-4 border border-gray-200">
+            <h2 class="text-2xl font-bold text-indigo-700 text-center mb-6">CattleAI Pro Login</h2>
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" id="username" required 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <input type="password" id="password" required 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <button type="submit" 
+                        class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                    Login
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main App (hidden initially) -->
+    <div id="appContainer" class="container mx-auto px-4 py-6 hidden">
+        <header class="mb-6 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold text-indigo-700">🐄 Sahil Cattle Farm</h1>
+                <p class="text-gray-500 text-sm">Semen Tracking & Management System</p>
+            </div>
+            <button id="logoutBtn" class="text-sm text-red-600 hover:text-red-800">
+                <i class="fas fa-sign-out-alt mr-1"></i> Logout
+            </button>
+        </header>
+
+        <!-- Quick Actions Bar -->
+        <div class="bg-white p-4 rounded-lg shadow-sm mobile-stack flex justify-between items-center mb-6">
+            <button id="showFormBtn" class="bg-indigo-600 text-white py-2 px-4 rounded-md text-sm hover:bg-indigo-700 mobile-full mb-2 sm:mb-0">
+                <i class="fas fa-plus mr-1"></i> Add New Record
+            </button>
+            <div class="flex space-x-2 mobile-full">
+                <input type="text" id="quickSearch" placeholder="Search by ID/Name" 
+                       class="flex-1 rounded-md border-gray-300 shadow-sm p-2 border text-sm">
+                <button id="quickSearchBtn" class="bg-gray-200 text-gray-700 py-2 px-4 rounded-md text-sm hover:bg-gray-300">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Add/Edit Record Form -->
+        <div id="recordForm" class="bg-white p-4 rounded-lg shadow-sm hidden mb-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-3 flex justify-between">
+                <span id="formTitle">New Semen Record</span>
+                <button id="closeFormBtn" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </h2>
+            <form id="semenForm" class="space-y-3">
+                <input type="hidden" id="recordId">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500">Animal ID*</label>
+                        <input type="text" id="animalId" required 
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500">Animal Name</label>
+                        <input type="text" id="animalName" 
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border text-sm">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-medium text-gray-500">Semen Type*</label>
+                    <input type="text" id="semenType" required 
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border text-sm">
+                </div>
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500">Date Given*</label>
+                        <input type="date" id="adminDate" required 
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500">Time Given*</label>
+                        <input type="time" id="adminTime" required 
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border text-sm">
+                    </div>
+                </div>
+                
+                <div class="flex items-center">
+                    <input type="checkbox" id="isRepeat" class="h-4 w-4 text-indigo-600">
+                    <label for="isRepeat" class="ml-2 text-xs text-gray-700">Repeat Administration</label>
+                </div>
+                
+                <div class="flex space-x-2 pt-2">
+                    <button type="submit" class="flex-1 bg-indigo-600 text-white py-2 px-4 rounded-md text-sm hover:bg-indigo-700">
+                        Save Record
+                    </button>
+                    <button type="button" id="deleteRecordBtn" class="bg-red-100 text-red-700 py-2 px-4 rounded-md text-sm hover:bg-red-200 hidden">
+                        Delete
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Summary Cards -->
+        <div id="summaryCards" class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+            <!-- Cards will be inserted here by JavaScript -->
+        </div>
+
+        <!-- Records Table -->
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-6">
+            <div class="p-3 border-b flex justify-between items-center">
+                <h2 class="font-medium text-gray-800">All Records</h2>
+                <div class="text-xs text-gray-500" id="recordCount">0 records</div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                            <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                            <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date & Time</th>
+                            <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                            <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recordsTable" class="bg-white divide-y divide-gray-200">
+                        <!-- Records will be inserted here by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Animal Detail Modal -->
+        <div id="animalModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+            <div class="bg-white rounded-lg shadow-lg max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+                <div class="p-4 border-b flex justify-between items-center">
+                    <h3 class="font-semibold text-gray-800" id="modalTitle">Animal Details</h3>
+                    <button id="closeModalBtn" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="p-4" id="modalContent">
+                    <!-- Content will be inserted here by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBmU_Emu1G37AWfUmlyT4411eX8Q8ACeLA",
+            authDomain: "sahilfarm-c73a1.firebaseapp.com",
+            projectId: "sahilfarm-c73a1",
+            storageBucket: "sahilfarm-c73a1.appspot.com",
+            messagingSenderId: "822562321775",
+            appId: "1:822562321775:web:ae7d6d559132623294a49a"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize records array
+            let records = [];
+            let currentUser = null;
+            
+            // DOM Elements
+            const loginScreen = document.getElementById('loginScreen');
+            const appContainer = document.getElementById('appContainer');
+            const loginForm = document.getElementById('loginForm');
+            const logoutBtn = document.getElementById('logoutBtn');
+            const recordForm = document.getElementById('recordForm');
+            const showFormBtn = document.getElementById('showFormBtn');
+            const closeFormBtn = document.getElementById('closeFormBtn');
+            const semenForm = document.getElementById('semenForm');
+            const quickSearch = document.getElementById('quickSearch');
+            const quickSearchBtn = document.getElementById('quickSearchBtn');
+            const animalModal = document.getElementById('animalModal');
+            const closeModalBtn = document.getElementById('closeModalBtn');
+            const summaryCards = document.getElementById('summaryCards');
+            const deleteRecordBtn = document.getElementById('deleteRecordBtn');
+            
+            // Set default date and time
+            function setDefaultDateTime() {
+                const now = new Date();
+                const dateStr = now.toISOString().split('T')[0];
+                const timeStr = now.toTimeString().substring(0, 5);
+                
+                document.getElementById('adminDate').value = dateStr;
+                document.getElementById('adminTime').value = timeStr;
+            }
+            
+            // Load records from Firestore
+            async function loadRecords() {
+                try {
+                    const querySnapshot = await db.collection("semenRecords").get();
+                    records = [];
+                    querySnapshot.forEach((doc) => {
+                        records.push({ firebaseId: doc.id, ...doc.data() });
+                    });
+                    updateSummaryCards();
+                    displayRecords(records);
+                } catch (error) {
+                    console.error("Error loading records:", error);
+                    showNotification('Error loading records', 'error');
+                }
+            }
+            
+            // Track authentication state
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    // User is signed in
+                    currentUser = user;
+                    loginScreen.classList.add('hidden');
+                    appContainer.classList.remove('hidden');
+                    setDefaultDateTime();
+                    loadRecords();
+                } else {
+                    // User is signed out
+                    currentUser = null;
+                    appContainer.classList.add('hidden');
+                    loginScreen.classList.remove('hidden');
+                    records = [];
+                }
+            });
+            
+            // Login functionality
+            loginForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const email = document.getElementById('username').value.trim();
+                const password = document.getElementById('password').value.trim();
+                
+                try {
+                    await auth.signInWithEmailAndPassword(email, password);
+                    showNotification('Login successful!', 'success');
+                } catch (error) {
+                    console.error("Login error:", error);
+                    showNotification('Invalid credentials!', 'error');
+                }
+            });
+            
+            // Logout functionality
+            logoutBtn.addEventListener('click', function() {
+                auth.signOut().then(() => {
+                    showNotification('Logged out successfully', 'success');
+                }).catch((error) => {
+                    console.error("Logout error:", error);
+                    showNotification('Error logging out', 'error');
+                });
+            });
+            
+            // Show/hide form
+            showFormBtn.addEventListener('click', function() {
+                document.getElementById('formTitle').textContent = 'New Semen Record';
+                document.getElementById('recordId').value = '';
+                semenForm.reset();
+                setDefaultDateTime();
+                deleteRecordBtn.classList.add('hidden');
+                recordForm.classList.remove('hidden');
+            });
+            
+            closeFormBtn.addEventListener('click', function() {
+                recordForm.classList.add('hidden');
+            });
+            
+            // Form submission
+            semenForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const recordId = document.getElementById('recordId').value;
+                const animalId = document.getElementById('animalId').value.trim();
+                const animalName = document.getElementById('animalName').value.trim();
+                const semenType = document.getElementById('semenType').value.trim();
+                const adminDate = document.getElementById('adminDate').value;
+                const adminTime = document.getElementById('adminTime').value;
+                const isRepeat = document.getElementById('isRepeat').checked;
+                
+                const datetimeGiven = `${adminDate}T${adminTime}`;
+                const timestamp = new Date(datetimeGiven).getTime();
+                
+                const recordData = {
+                    animalId: animalId,
+                    name: animalName || 'Unnamed',
+                    semenType: semenType,
+                    dateGiven: adminDate,
+                    timeGiven: adminTime,
+                    datetimeGiven: datetimeGiven,
+                    isRepeat: isRepeat,
+                    timestamp: timestamp,
+                    lastUpdated: new Date().toISOString()
+                };
+                
+                try {
+                    if (recordId) {
+                        // Update existing record
+                        await db.collection("semenRecords").doc(recordId).update(recordData);
+                        showNotification('Record updated successfully!', 'success');
+                    } else {
+                        // Add new record
+                        await db.collection("semenRecords").add(recordData);
+                        showNotification('Record added successfully!', 'success');
+                    }
+                    
+                    // Reset and hide form
+                    semenForm.reset();
+                    recordForm.classList.add('hidden');
+                    setDefaultDateTime();
+                    
+                    // Reload records
+                    await loadRecords();
+                } catch (error) {
+                    console.error("Error saving record:", error);
+                    showNotification('Error saving record', 'error');
+                }
+            });
+            
+            // Delete record
+            deleteRecordBtn.addEventListener('click', async function() {
+                const recordId = document.getElementById('recordId').value;
+                if (!recordId) return;
+                
+                if (confirm('Are you sure you want to delete this record?')) {
+                    try {
+                        await db.collection("semenRecords").doc(recordId).delete();
+                        showNotification('Record deleted successfully!', 'success');
+                        recordForm.classList.add('hidden');
+                        await loadRecords();
+                    } catch (error) {
+                        console.error("Error deleting record:", error);
+                        showNotification('Error deleting record', 'error');
+                    }
+                }
+            });
+            
+            // Quick search functionality
+            function performSearch() {
+                const searchTerm = quickSearch.value.toLowerCase();
+                
+                if (!searchTerm) {
+                    displayRecords(records);
+                    updateSummaryCards();
+                    return;
+                }
+                
+                const filteredRecords = records.filter(record => 
+                    record.animalId.toLowerCase().includes(searchTerm) || 
+                    record.name.toLowerCase().includes(searchTerm)
+                );
+                
+                displayRecords(filteredRecords);
+            }
+            
+            quickSearchBtn.addEventListener('click', performSearch);
+            quickSearch.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    performSearch();
+                }
+            });
+            
+            // Display records in table
+            function displayRecords(recordsToDisplay) {
+                const tableBody = document.getElementById('recordsTable');
+                tableBody.innerHTML = '';
+                
+                // Update record count
+                document.getElementById('recordCount').textContent = `${recordsToDisplay.length} records`;
+                
+                if (recordsToDisplay.length === 0) {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td colspan="5" class="px-3 py-4 text-sm text-gray-500 text-center">
+                            No records found
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                    return;
+                }
+                
+                // Sort by date (newest first)
+                recordsToDisplay.sort((a, b) => b.timestamp - a.timestamp);
+                
+                recordsToDisplay.forEach(record => {
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-gray-50';
+                    
+                    row.innerHTML = `
+                        <td class="px-3 py-2 text-sm font-medium text-gray-900">${record.animalId}</td>
+                        <td class="px-3 py-2 text-sm text-gray-500">${record.name}</td>
+                        <td class="px-3 py-2 text-sm text-gray-500">
+                            ${formatDate(record.dateGiven)} at ${record.timeGiven}
+                        </td>
+                        <td class="px-3 py-2 text-sm text-gray-500">
+                            ${record.isRepeat ? '🔁' : '➡️'} ${record.semenType}
+                        </td>
+                        <td class="px-3 py-2 text-sm text-gray-500">
+                            <button class="edit-btn text-indigo-600 hover:text-indigo-900 mr-2" data-id="${record.firebaseId}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="view-btn text-green-600 hover:text-green-900" data-id="${record.animalId}">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </td>
+                    `;
+                    
+                    tableBody.appendChild(row);
+                });
+                
+                // Add event listeners to edit buttons
+                document.querySelectorAll('.edit-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const recordId = this.getAttribute('data-id');
+                        editRecord(recordId);
+                    });
+                });
+                
+                // Add event listeners to view buttons
+                document.querySelectorAll('.view-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const animalId = this.getAttribute('data-id');
+                        showAnimalDetails(animalId);
+                    });
+                });
+            }
+            
+            // Edit record
+            async function editRecord(recordId) {
+                try {
+                    const doc = await db.collection("semenRecords").doc(recordId).get();
+                    if (!doc.exists) {
+                        showNotification('Record not found', 'error');
+                        return;
+                    }
+                    
+                    const record = doc.data();
+                    
+                    document.getElementById('formTitle').textContent = 'Edit Record';
+                    document.getElementById('recordId').value = recordId;
+                    document.getElementById('animalId').value = record.animalId;
+                    document.getElementById('animalName').value = record.name;
+                    document.getElementById('semenType').value = record.semenType;
+                    document.getElementById('adminDate').value = record.dateGiven;
+                    document.getElementById('adminTime').value = record.timeGiven;
+                    document.getElementById('isRepeat').checked = record.isRepeat;
+                    
+                    deleteRecordBtn.classList.remove('hidden');
+                    recordForm.classList.remove('hidden');
+                } catch (error) {
+                    console.error("Error loading record:", error);
+                    showNotification('Error loading record', 'error');
+                }
+            }
+            
+            // Update summary cards
+            function updateSummaryCards() {
+                const totalAnimals = new Set(records.map(r => r.animalId)).size;
+                const totalAdministrations = records.length;
+                const repeatAdministrations = records.filter(r => r.isRepeat).length;
+                
+                // Get today's date for filtering
+                const today = new Date().toISOString().split('T')[0];
+                const todaysRecords = records.filter(r => r.dateGiven === today).length;
+                
+                summaryCards.innerHTML = `
+                    <div class="bg-blue-50 p-3 rounded-lg">
+                        <div class="text-blue-800 text-xs font-medium">Total Animals</div>
+                        <div class="text-blue-600 text-2xl font-bold mt-1">${totalAnimals}</div>
+                    </div>
+                    <div class="bg-green-50 p-3 rounded-lg">
+                        <div class="text-green-800 text-xs font-medium">Today's Doses</div>
+                        <div class="text-green-600 text-2xl font-bold mt-1">${todaysRecords}</div>
+                    </div>
+                    <div class="bg-purple-50 p-3 rounded-lg">
+                        <div class="text-purple-800 text-xs font-medium">Total Doses</div>
+                        <div class="text-purple-600 text-2xl font-bold mt-1">${totalAdministrations}</div>
+                    </div>
+                `;
+            }
+            
+            // Show animal details modal
+            function showAnimalDetails(animalId) {
+                const animalRecords = records.filter(record => record.animalId === animalId);
+                
+                if (animalRecords.length === 0) return;
+                
+                // Sort by date (oldest first)
+                animalRecords.sort((a, b) => a.timestamp - b.timestamp);
+                
+                const firstRecord = animalRecords[0];
+                const lastRecord = animalRecords[animalRecords.length - 1];
+                const today = new Date();
+                const todayDate = today.toISOString().split('T')[0];
+                
+                const totalDays = Math.floor((today - new Date(firstRecord.datetimeGiven)) / (1000 * 60 * 60 * 24));
+                const daysSinceLast = Math.floor((today - new Date(lastRecord.datetimeGiven)) / (1000 * 60 * 60 * 24));
+                const repeatCount = animalRecords.filter(record => record.isRepeat).length;
+                
+                // Count doses given on the current day
+                const todaysDoses = animalRecords.filter(r => r.dateGiven === todayDate).length;
+                
+                // Create modal content
+                document.getElementById('modalTitle').textContent = `${animalId} - ${firstRecord.name}`;
+                
+                let recordsHtml = animalRecords.map(record => `
+                    <div class="py-2 border-b last:border-0">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="font-medium">${formatDate(record.dateGiven)}</span>
+                                <span class="text-xs text-gray-500 ml-2">at ${record.timeGiven}</span>
+                            </div>
+                            <span class="text-xs ${getDaysPassed(record.datetimeGiven) > 30 ? 'text-green-600' : 'text-yellow-600'}">
+                                ${getDaysPassed(record.datetimeGiven)}d ago
+                            </span>
+                        </div>
+                        <div class="text-sm text-gray-600 mt-1">
+                            <span class="font-medium">${record.semenType}</span>
+                            ${record.isRepeat ? '<span class="ml-2 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">Repeat</span>' : ''}
+                        </div>
+                    </div>
+                `).join('');
+                
+                document.getElementById('modalContent').innerHTML = `
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-blue-50 p-3 rounded-lg">
+                                <div class="text-blue-800 text-xs font-medium">Total Doses</div>
+                                <div class="text-blue-600 text-xl font-bold mt-1">${animalRecords.length}</div>
+                            </div>
+                            <div class="bg-green-50 p-3 rounded-lg">
+                                <div class="text-green-800 text-xs font-medium">Today's Doses</div>
+                                <div class="text-green-600 text-xl font-bold mt-1">${todaysDoses}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-purple-50 p-3 rounded-lg">
+                                <div class="text-purple-800 text-xs font-medium">Repeat Doses</div>
+                                <div class="text-purple-600 text-xl font-bold mt-1">${repeatCount}</div>
+                            </div>
+                            <div class="bg-yellow-50 p-3 rounded-lg">
+                                <div class="text-yellow-800 text-xs font-medium">Days Since Last</div>
+                                <div class="text-yellow-600 text-xl font-bold mt-1">${daysSinceLast}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gray-50 p-3 rounded-lg">
+                            <div class="text-gray-800 text-xs font-medium">First Administration</div>
+                            <div class="text-gray-600 text-sm mt-1">${formatDate(firstRecord.dateGiven)} at ${firstRecord.timeGiven}</div>
+                        </div>
+                        
+                        <div>
+                            <h4 class="font-medium text-gray-800 mb-2">All Administrations</h4>
+                            <div class="max-h-60 overflow-y-auto">
+                                ${recordsHtml}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                animalModal.classList.remove('hidden');
+            }
+            
+            // Close modal
+            closeModalBtn.addEventListener('click', function() {
+                animalModal.classList.add('hidden');
+            });
+            
+            // Helper functions
+            function formatDate(dateString) {
+                const options = { year: 'numeric', month: 'short', day: 'numeric' };
+                return new Date(dateString).toLocaleDateString(undefined, options);
+            }
+            
+            function getDaysPassed(datetimeString) {
+                const dateGiven = new Date(datetimeString);
+                const today = new Date();
+                return Math.floor((today - dateGiven) / (1000 * 60 * 60 * 24));
+            }
+            
+            function showNotification(message, type = 'success') {
+                const notification = document.createElement('div');
+                notification.className = `fixed bottom-4 right-4 px-4 py-2 rounded-md shadow-md text-white ${
+                    type === 'success' ? 'bg-green-500' : 'bg-red-500'
+                }`;
+                notification.textContent = message;
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.classList.add('opacity-0', 'transition-opacity', 'duration-300');
+                    setTimeout(() => notification.remove(), 300);
+                }, 3000);
+            }
+            
+            // Initialize default date/time
+            setDefaultDateTime();
+        });
+    </script>
+</body>
+</html>
