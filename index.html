@@ -10,165 +10,359 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
         @media (max-width: 640px) {
             .mobile-stack { flex-direction: column; }
             .mobile-full { width: 100%; }
         }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .slide-up {
+            animation: slideUp 0.4s ease-out;
+        }
+        
+        @keyframes slideUp {
+            from { 
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .rotate {
+            animation: rotate 1.5s linear infinite;
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        }
+        
+        .table-row {
+            transition: all 0.2s ease;
+        }
+        
+        .table-row:hover {
+            background-color: #f1f5f9 !important;
+        }
+        
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
     </style>
 </head>
 <body class="bg-gray-50">
     <!-- Login Screen -->
-    <div id="loginScreen" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
-        <div class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full mx-4 border border-gray-200">
-            <h2 class="text-2xl font-bold text-indigo-700 text-center mb-6">CattleAI Pro Login</h2>
+    <div id="loginScreen" class="fixed inset-0 bg-white z-50 flex items-center justify-center transition-opacity duration-300">
+        <div class="bg-white p-8 rounded-xl shadow-2xl max-w-md w-full mx-4 border border-gray-100 animate__animated animate__fadeIn">
+            <div class="flex justify-center mb-6">
+                <div class="gradient-bg text-white p-3 rounded-lg inline-flex items-center justify-center">
+                    <i class="fas fa-cow text-2xl"></i>
+                </div>
+            </div>
+            <h2 class="text-3xl font-bold text-gray-800 text-center mb-2">CattleAI Pro</h2>
+            <p class="text-gray-500 text-center mb-6">Semen Management System</p>
+            
             <form id="loginForm" class="space-y-4">
-                <div>
+                <div class="space-y-1">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                    <input type="email" id="username" required 
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-envelope text-gray-400"></i>
+                        </div>
+                        <input type="email" id="username" required 
+                               class="w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200">
+                    </div>
                 </div>
-                <div>
+                <div class="space-y-1">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                    <input type="password" id="password" required 
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-lock text-gray-400"></i>
+                        </div>
+                        <input type="password" id="password" required 
+                               class="w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200">
+                    </div>
                 </div>
-                <button type="submit" 
-                        class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                    Login
+                <button type="submit" id="loginBtn"
+                        class="w-full gradient-bg text-white py-2.5 px-4 rounded-lg hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-300 flex items-center justify-center">
+                    <span id="loginBtnText">Login</span>
+                    <i id="loginSpinner" class="fas fa-spinner rotate ml-2 hidden"></i>
                 </button>
             </form>
+            
+            <div class="mt-6 text-center">
+                <p class="text-xs text-gray-500">By logging in, you agree to our Terms of Service</p>
+            </div>
         </div>
     </div>
 
     <!-- Main App (hidden initially) -->
     <div id="appContainer" class="container mx-auto px-4 py-6 hidden">
-        <header class="mb-6 flex justify-between items-center">
-            <div>
-                <h1 class="text-2xl font-bold text-indigo-700">🐄 Sahil Cattle Farm</h1>
-                <p class="text-gray-500 text-sm">Semen Tracking & Management System</p>
+        <!-- App Header -->
+        <header class="mb-8 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="gradient-bg text-white p-2 rounded-lg">
+                    <i class="fas fa-cow text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800">🐄 Sahil Cattle Farm</h1>
+                    <p class="text-gray-500 text-sm">Semen Tracking & Management System</p>
+                </div>
             </div>
-            <button id="logoutBtn" class="text-sm text-red-600 hover:text-red-800">
-                <i class="fas fa-sign-out-alt mr-1"></i> Logout
-            </button>
+            <div class="flex items-center space-x-4">
+                <div class="hidden sm:block text-sm text-gray-600">
+                    <i class="far fa-user-circle mr-1"></i>
+                    <span id="userEmail">user@example.com</span>
+                </div>
+                <button id="logoutBtn" class="text-sm text-gray-600 hover:text-red-600 transition-colors duration-200 flex items-center">
+                    <i class="fas fa-sign-out-alt mr-1"></i> <span class="hidden sm:inline">Logout</span>
+                </button>
+            </div>
         </header>
 
         <!-- Quick Actions Bar -->
-        <div class="bg-white p-4 rounded-lg shadow-sm mobile-stack flex justify-between items-center mb-6">
-            <button id="showFormBtn" class="bg-indigo-600 text-white py-2 px-4 rounded-md text-sm hover:bg-indigo-700 mobile-full mb-2 sm:mb-0">
-                <i class="fas fa-plus mr-1"></i> Add New Record
+        <div class="bg-white p-4 rounded-xl shadow-sm mobile-stack flex justify-between items-center mb-6 border border-gray-100 slide-up">
+            <button id="showFormBtn" class="gradient-bg text-white py-2 px-4 rounded-lg text-sm hover:opacity-90 mobile-full mb-2 sm:mb-0 transition-all duration-300 flex items-center">
+                <i class="fas fa-plus mr-2"></i> Add New Record
             </button>
             <div class="flex space-x-2 mobile-full">
-                <input type="text" id="quickSearch" placeholder="Search by ID/Name" 
-                       class="flex-1 rounded-md border-gray-300 shadow-sm p-2 border text-sm">
-                <button id="quickSearchBtn" class="bg-gray-200 text-gray-700 py-2 px-4 rounded-md text-sm hover:bg-gray-300">
+                <div class="relative flex-1">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-search text-gray-400"></i>
+                    </div>
+                    <input type="text" id="quickSearch" placeholder="Search by ID/Name" 
+                           class="w-full pl-10 pr-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200">
+                </div>
+                <button id="quickSearchBtn" class="bg-gray-100 text-gray-700 py-2 px-4 rounded-lg text-sm hover:bg-gray-200 transition-colors duration-200">
                     <i class="fas fa-search"></i>
                 </button>
             </div>
         </div>
 
         <!-- Add/Edit Record Form -->
-        <div id="recordForm" class="bg-white p-4 rounded-lg shadow-sm hidden mb-6">
-            <h2 class="text-lg font-semibold text-gray-800 mb-3 flex justify-between">
-                <span id="formTitle">New Semen Record</span>
-                <button id="closeFormBtn" class="text-gray-500 hover:text-gray-700">
+        <div id="recordForm" class="bg-white p-5 rounded-xl shadow-sm hidden mb-6 border border-gray-100 slide-up">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4 flex justify-between items-center">
+                <span id="formTitle" class="flex items-center">
+                    <i class="fas fa-file-medical mr-2 text-indigo-600"></i>
+                    <span>New Semen Record</span>
+                </span>
+                <button id="closeFormBtn" class="text-gray-400 hover:text-gray-600 transition-colors duration-200">
                     <i class="fas fa-times"></i>
                 </button>
             </h2>
-            <form id="semenForm" class="space-y-3">
+            <form id="semenForm" class="space-y-4">
                 <input type="hidden" id="recordId">
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-1">
                         <label class="block text-xs font-medium text-gray-500">Animal ID*</label>
-                        <input type="text" id="animalId" required 
-                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border text-sm">
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-tag text-gray-400"></i>
+                            </div>
+                            <input type="text" id="animalId" required 
+                                   class="mt-1 block w-full pl-10 pr-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200">
+                        </div>
                     </div>
-                    <div>
+                    <div class="space-y-1">
                         <label class="block text-xs font-medium text-gray-500">Animal Name</label>
-                        <input type="text" id="animalName" 
-                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border text-sm">
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-cow text-gray-400"></i>
+                            </div>
+                            <input type="text" id="animalName" 
+                                   class="mt-1 block w-full pl-10 pr-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200">
+                        </div>
                     </div>
                 </div>
                 
-                <div>
+                <div class="space-y-1">
                     <label class="block text-xs font-medium text-gray-500">Semen Type*</label>
-                    <input type="text" id="semenType" required 
-                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border text-sm">
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-vial text-gray-400"></i>
+                        </div>
+                        <input type="text" id="semenType" required 
+                               class="mt-1 block w-full pl-10 pr-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200">
+                    </div>
                 </div>
                 
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-1">
                         <label class="block text-xs font-medium text-gray-500">Date Given*</label>
-                        <input type="date" id="adminDate" required 
-                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border text-sm">
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="far fa-calendar text-gray-400"></i>
+                            </div>
+                            <input type="date" id="adminDate" required 
+                                   class="mt-1 block w-full pl-10 pr-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200">
+                        </div>
                     </div>
-                    <div>
+                    <div class="space-y-1">
                         <label class="block text-xs font-medium text-gray-500">Time Given*</label>
-                        <input type="time" id="adminTime" required 
-                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border text-sm">
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="far fa-clock text-gray-400"></i>
+                            </div>
+                            <input type="time" id="adminTime" required 
+                                   class="mt-1 block w-full pl-10 pr-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200">
+                        </div>
                     </div>
                 </div>
                 
-                <div class="flex items-center">
-                    <input type="checkbox" id="isRepeat" class="h-4 w-4 text-indigo-600">
+                <div class="flex items-center pt-2">
+                    <input type="checkbox" id="isRepeat" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 rounded border-gray-300">
                     <label for="isRepeat" class="ml-2 text-xs text-gray-700">Repeat Administration</label>
                 </div>
                 
-                <div class="flex space-x-2 pt-2">
-                    <button type="submit" class="flex-1 bg-indigo-600 text-white py-2 px-4 rounded-md text-sm hover:bg-indigo-700">
-                        Save Record
+                <div class="flex space-x-3 pt-2">
+                    <button type="submit" id="saveBtn" class="flex-1 gradient-bg text-white py-2.5 px-4 rounded-lg hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-300 flex items-center justify-center">
+                        <span id="saveBtnText">Save Record</span>
+                        <i id="saveSpinner" class="fas fa-spinner rotate ml-2 hidden"></i>
                     </button>
-                    <button type="button" id="deleteRecordBtn" class="bg-red-100 text-red-700 py-2 px-4 rounded-md text-sm hover:bg-red-200 hidden">
-                        Delete
+                    <button type="button" id="deleteRecordBtn" class="bg-red-50 text-red-600 py-2.5 px-4 rounded-lg text-sm hover:bg-red-100 transition-colors duration-200 flex items-center justify-center hidden">
+                        <i class="fas fa-trash mr-2"></i>
+                        <span>Delete</span>
                     </button>
                 </div>
             </form>
         </div>
 
         <!-- Summary Cards -->
-        <div id="summaryCards" class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-            <!-- Cards will be inserted here by JavaScript -->
+        <div id="summaryCards" class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 animate__animated animate__fadeIn">
+            <!-- Loading Skeletons -->
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 h-24 skeleton"></div>
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 h-24 skeleton"></div>
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 h-24 skeleton"></div>
         </div>
 
         <!-- Records Table -->
-        <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-6">
-            <div class="p-3 border-b flex justify-between items-center">
-                <h2 class="font-medium text-gray-800">All Records</h2>
-                <div class="text-xs text-gray-500" id="recordCount">0 records</div>
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6 border border-gray-100 slide-up">
+            <div class="p-4 border-b border-gray-100 flex justify-between items-center">
+                <h2 class="font-medium text-gray-800 flex items-center">
+                    <i class="fas fa-list-ul mr-2 text-indigo-600"></i>
+                    All Records
+                </h2>
+                <div class="text-xs text-gray-500 flex items-center" id="recordCount">
+                    <i class="fas fa-spinner rotate mr-1 text-gray-400 text-xs"></i>
+                    <span>Loading...</span>
+                </div>
             </div>
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
-                            <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                            <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date & Time</th>
-                            <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-                            <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="recordsTable" class="bg-white divide-y divide-gray-200">
-                        <!-- Records will be inserted here by JavaScript -->
+                        <!-- Loading Skeletons -->
+                        <tr class="table-row">
+                            <td class="px-4 py-3"><div class="h-4 bg-gray-100 rounded skeleton"></div></td>
+                            <td class="px-4 py-3"><div class="h-4 bg-gray-100 rounded skeleton"></div></td>
+                            <td class="px-4 py-3"><div class="h-4 bg-gray-100 rounded skeleton"></div></td>
+                            <td class="px-4 py-3"><div class="h-4 bg-gray-100 rounded skeleton"></div></td>
+                            <td class="px-4 py-3"><div class="h-4 bg-gray-100 rounded skeleton"></div></td>
+                        </tr>
+                        <tr class="table-row">
+                            <td class="px-4 py-3"><div class="h-4 bg-gray-100 rounded skeleton"></div></td>
+                            <td class="px-4 py-3"><div class="h-4 bg-gray-100 rounded skeleton"></div></td>
+                            <td class="px-4 py-3"><div class="h-4 bg-gray-100 rounded skeleton"></div></td>
+                            <td class="px-4 py-3"><div class="h-4 bg-gray-100 rounded skeleton"></div></td>
+                            <td class="px-4 py-3"><div class="h-4 bg-gray-100 rounded skeleton"></div></td>
+                        </tr>
+                        <tr class="table-row">
+                            <td class="px-4 py-3"><div class="h-4 bg-gray-100 rounded skeleton"></div></td>
+                            <td class="px-4 py-3"><div class="h-4 bg-gray-100 rounded skeleton"></div></td>
+                            <td class="px-4 py-3"><div class="h-4 bg-gray-100 rounded skeleton"></div></td>
+                            <td class="px-4 py-3"><div class="h-4 bg-gray-100 rounded skeleton"></div></td>
+                            <td class="px-4 py-3"><div class="h-4 bg-gray-100 rounded skeleton"></div></td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
         </div>
 
         <!-- Animal Detail Modal -->
-        <div id="animalModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-            <div class="bg-white rounded-lg shadow-lg max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
-                <div class="p-4 border-b flex justify-between items-center">
-                    <h3 class="font-semibold text-gray-800" id="modalTitle">Animal Details</h3>
-                    <button id="closeModalBtn" class="text-gray-500 hover:text-gray-700">
+        <div id="animalModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 transition-opacity duration-300">
+            <div class="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto animate__animated animate__zoomIn">
+                <div class="p-4 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white z-10">
+                    <h3 class="font-semibold text-gray-800 flex items-center" id="modalTitle">
+                        <i class="fas fa-cow mr-2 text-indigo-600"></i>
+                        Animal Details
+                    </h3>
+                    <button id="closeModalBtn" class="text-gray-400 hover:text-gray-600 transition-colors duration-200">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
                 <div class="p-4" id="modalContent">
-                    <!-- Content will be inserted here by JavaScript -->
+                    <!-- Loading Skeleton -->
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-gray-100 p-3 rounded-lg h-20 skeleton"></div>
+                            <div class="bg-gray-100 p-3 rounded-lg h-20 skeleton"></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-gray-100 p-3 rounded-lg h-20 skeleton"></div>
+                            <div class="bg-gray-100 p-3 rounded-lg h-20 skeleton"></div>
+                        </div>
+                        <div class="bg-gray-100 p-3 rounded-lg h-16 skeleton"></div>
+                        <div>
+                            <div class="bg-gray-100 p-3 rounded-lg h-8 w-1/3 mb-2 skeleton"></div>
+                            <div class="bg-gray-100 p-3 rounded-lg h-60 skeleton"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
+        
+        <!-- Floating Action Button (Mobile) -->
+        <button id="mobileFab" class="fixed bottom-6 right-6 bg-indigo-600 text-white p-4 rounded-full shadow-lg hover:bg-indigo-700 transition-all duration-300 md:hidden z-40 flex items-center justify-center">
+            <i class="fas fa-plus text-xl"></i>
+        </button>
     </div>
 
     <script>
@@ -196,9 +390,14 @@
             const loginScreen = document.getElementById('loginScreen');
             const appContainer = document.getElementById('appContainer');
             const loginForm = document.getElementById('loginForm');
+            const loginBtn = document.getElementById('loginBtn');
+            const loginBtnText = document.getElementById('loginBtnText');
+            const loginSpinner = document.getElementById('loginSpinner');
             const logoutBtn = document.getElementById('logoutBtn');
+            const userEmail = document.getElementById('userEmail');
             const recordForm = document.getElementById('recordForm');
             const showFormBtn = document.getElementById('showFormBtn');
+            const mobileFab = document.getElementById('mobileFab');
             const closeFormBtn = document.getElementById('closeFormBtn');
             const semenForm = document.getElementById('semenForm');
             const quickSearch = document.getElementById('quickSearch');
@@ -207,6 +406,9 @@
             const closeModalBtn = document.getElementById('closeModalBtn');
             const summaryCards = document.getElementById('summaryCards');
             const deleteRecordBtn = document.getElementById('deleteRecordBtn');
+            const saveBtn = document.getElementById('saveBtn');
+            const saveBtnText = document.getElementById('saveBtnText');
+            const saveSpinner = document.getElementById('saveSpinner');
             
             // Set default date and time
             function setDefaultDateTime() {
@@ -221,6 +423,7 @@
             // Load records from Firestore
             async function loadRecords() {
                 try {
+                    showLoading(true);
                     const querySnapshot = await db.collection("semenRecords").get();
                     records = [];
                     querySnapshot.forEach((doc) => {
@@ -228,9 +431,31 @@
                     });
                     updateSummaryCards();
                     displayRecords(records);
+                    showLoading(false);
                 } catch (error) {
                     console.error("Error loading records:", error);
                     showNotification('Error loading records', 'error');
+                    showLoading(false);
+                }
+            }
+            
+            // Show loading state
+            function showLoading(loading) {
+                if (loading) {
+                    document.querySelectorAll('#recordsTable tr').forEach(row => {
+                        row.innerHTML = `
+                            <td class="px-4 py-3"><div class="h-4 bg-gray-100 rounded skeleton"></div></td>
+                            <td class="px-4 py-3"><div class="h-4 bg-gray-100 rounded skeleton"></div></td>
+                            <td class="px-4 py-3"><div class="h-4 bg-gray-100 rounded skeleton"></div></td>
+                            <td class="px-4 py-3"><div class="h-4 bg-gray-100 rounded skeleton"></div></td>
+                            <td class="px-4 py-3"><div class="h-4 bg-gray-100 rounded skeleton"></div></td>
+                        `;
+                    });
+                    
+                    document.getElementById('recordCount').innerHTML = `
+                        <i class="fas fa-spinner rotate mr-1 text-gray-400 text-xs"></i>
+                        <span>Loading...</span>
+                    `;
                 }
             }
             
@@ -239,15 +464,22 @@
                 if (user) {
                     // User is signed in
                     currentUser = user;
-                    loginScreen.classList.add('hidden');
-                    appContainer.classList.remove('hidden');
+                    userEmail.textContent = user.email;
+                    
+                    // Animate login screen out
+                    loginScreen.classList.add('opacity-0');
+                    setTimeout(() => {
+                        loginScreen.classList.add('hidden');
+                        appContainer.classList.remove('hidden');
+                    }, 300);
+                    
                     setDefaultDateTime();
                     loadRecords();
                 } else {
                     // User is signed out
                     currentUser = null;
                     appContainer.classList.add('hidden');
-                    loginScreen.classList.remove('hidden');
+                    loginScreen.classList.remove('hidden', 'opacity-0');
                     records = [];
                 }
             });
@@ -260,11 +492,19 @@
                 const password = document.getElementById('password').value.trim();
                 
                 try {
+                    loginBtnText.textContent = 'Logging in...';
+                    loginSpinner.classList.remove('hidden');
+                    loginBtn.disabled = true;
+                    
                     await auth.signInWithEmailAndPassword(email, password);
                     showNotification('Login successful!', 'success');
                 } catch (error) {
                     console.error("Login error:", error);
                     showNotification('Invalid credentials!', 'error');
+                } finally {
+                    loginBtnText.textContent = 'Login';
+                    loginSpinner.classList.add('hidden');
+                    loginBtn.disabled = false;
                 }
             });
             
@@ -279,14 +519,21 @@
             });
             
             // Show/hide form
-            showFormBtn.addEventListener('click', function() {
-                document.getElementById('formTitle').textContent = 'New Semen Record';
+            function showForm() {
+                document.getElementById('formTitle').innerHTML = `
+                    <i class="fas fa-file-medical mr-2 text-indigo-600"></i>
+                    <span>New Semen Record</span>
+                `;
                 document.getElementById('recordId').value = '';
                 semenForm.reset();
                 setDefaultDateTime();
                 deleteRecordBtn.classList.add('hidden');
                 recordForm.classList.remove('hidden');
-            });
+                recordForm.scrollIntoView({ behavior: 'smooth' });
+            }
+            
+            showFormBtn.addEventListener('click', showForm);
+            mobileFab.addEventListener('click', showForm);
             
             closeFormBtn.addEventListener('click', function() {
                 recordForm.classList.add('hidden');
@@ -320,6 +567,10 @@
                 };
                 
                 try {
+                    saveBtnText.textContent = 'Saving...';
+                    saveSpinner.classList.remove('hidden');
+                    saveBtn.disabled = true;
+                    
                     if (recordId) {
                         // Update existing record
                         await db.collection("semenRecords").doc(recordId).update(recordData);
@@ -340,6 +591,10 @@
                 } catch (error) {
                     console.error("Error saving record:", error);
                     showNotification('Error saving record', 'error');
+                } finally {
+                    saveBtnText.textContent = 'Save Record';
+                    saveSpinner.classList.add('hidden');
+                    saveBtn.disabled = false;
                 }
             });
             
@@ -350,6 +605,9 @@
                 
                 if (confirm('Are you sure you want to delete this record?')) {
                     try {
+                        deleteRecordBtn.innerHTML = '<i class="fas fa-spinner rotate mr-2"></i> Deleting...';
+                        deleteRecordBtn.disabled = true;
+                        
                         await db.collection("semenRecords").doc(recordId).delete();
                         showNotification('Record deleted successfully!', 'success');
                         recordForm.classList.add('hidden');
@@ -357,6 +615,9 @@
                     } catch (error) {
                         console.error("Error deleting record:", error);
                         showNotification('Error deleting record', 'error');
+                    } finally {
+                        deleteRecordBtn.innerHTML = '<i class="fas fa-trash mr-2"></i><span>Delete</span>';
+                        deleteRecordBtn.disabled = false;
                     }
                 }
             });
@@ -392,13 +653,16 @@
                 tableBody.innerHTML = '';
                 
                 // Update record count
-                document.getElementById('recordCount').textContent = `${recordsToDisplay.length} records`;
+                document.getElementById('recordCount').innerHTML = `
+                    <i class="fas fa-database mr-1 text-gray-400"></i>
+                    <span>${recordsToDisplay.length} records</span>
+                `;
                 
                 if (recordsToDisplay.length === 0) {
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td colspan="5" class="px-3 py-4 text-sm text-gray-500 text-center">
-                            No records found
+                        <td colspan="5" class="px-4 py-4 text-sm text-gray-500 text-center">
+                            <i class="far fa-folder-open mr-1"></i> No records found
                         </td>
                     `;
                     tableBody.appendChild(row);
@@ -410,22 +674,35 @@
                 
                 recordsToDisplay.forEach(record => {
                     const row = document.createElement('tr');
-                    row.className = 'hover:bg-gray-50';
+                    row.className = 'table-row';
                     
                     row.innerHTML = `
-                        <td class="px-3 py-2 text-sm font-medium text-gray-900">${record.animalId}</td>
-                        <td class="px-3 py-2 text-sm text-gray-500">${record.name}</td>
-                        <td class="px-3 py-2 text-sm text-gray-500">
-                            ${formatDate(record.dateGiven)} at ${record.timeGiven}
+                        <td class="px-4 py-3 text-sm font-medium text-gray-900">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                                ${record.animalId}
+                            </span>
                         </td>
-                        <td class="px-3 py-2 text-sm text-gray-500">
-                            ${record.isRepeat ? '🔁' : '➡️'} ${record.semenType}
+                        <td class="px-4 py-3 text-sm text-gray-500">${record.name}</td>
+                        <td class="px-4 py-3 text-sm text-gray-500">
+                            <div class="flex items-center">
+                                <i class="far fa-calendar mr-1 text-gray-400"></i>
+                                ${formatDate(record.dateGiven)}
+                                <span class="mx-1 text-gray-300">|</span>
+                                <i class="far fa-clock mr-1 text-gray-400"></i>
+                                ${record.timeGiven}
+                            </div>
                         </td>
-                        <td class="px-3 py-2 text-sm text-gray-500">
-                            <button class="edit-btn text-indigo-600 hover:text-indigo-900 mr-2" data-id="${record.firebaseId}">
+                        <td class="px-4 py-3 text-sm text-gray-500">
+                            <div class="flex items-center">
+                                ${record.isRepeat ? '<i class="fas fa-redo mr-1 text-green-500"></i>' : '<i class="fas fa-arrow-right mr-1 text-blue-500"></i>'}
+                                ${record.semenType}
+                            </div>
+                        </td>
+                        <td class="px-4 py-3 text-sm text-gray-500">
+                            <button class="edit-btn text-indigo-600 hover:text-indigo-900 mr-3 transition-colors duration-200" data-id="${record.firebaseId}" title="Edit">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button class="view-btn text-green-600 hover:text-green-900" data-id="${record.animalId}">
+                            <button class="view-btn text-green-600 hover:text-green-900 transition-colors duration-200" data-id="${record.animalId}" title="View Details">
                                 <i class="fas fa-eye"></i>
                             </button>
                         </td>
@@ -462,7 +739,10 @@
                     
                     const record = doc.data();
                     
-                    document.getElementById('formTitle').textContent = 'Edit Record';
+                    document.getElementById('formTitle').innerHTML = `
+                        <i class="fas fa-edit mr-2 text-indigo-600"></i>
+                        <span>Edit Record</span>
+                    `;
                     document.getElementById('recordId').value = recordId;
                     document.getElementById('animalId').value = record.animalId;
                     document.getElementById('animalName').value = record.name;
@@ -473,6 +753,7 @@
                     
                     deleteRecordBtn.classList.remove('hidden');
                     recordForm.classList.remove('hidden');
+                    recordForm.scrollIntoView({ behavior: 'smooth' });
                 } catch (error) {
                     console.error("Error loading record:", error);
                     showNotification('Error loading record', 'error');
@@ -490,17 +771,38 @@
                 const todaysRecords = records.filter(r => r.dateGiven === today).length;
                 
                 summaryCards.innerHTML = `
-                    <div class="bg-blue-50 p-3 rounded-lg">
-                        <div class="text-blue-800 text-xs font-medium">Total Animals</div>
-                        <div class="text-blue-600 text-2xl font-bold mt-1">${totalAnimals}</div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 card-hover">
+                        <div class="flex items-center">
+                            <div class="p-2 rounded-lg bg-blue-50 text-blue-600 mr-3">
+                                <i class="fas fa-cow text-lg"></i>
+                            </div>
+                            <div>
+                                <div class="text-xs font-medium text-gray-500">Total Animals</div>
+                                <div class="text-xl font-bold text-gray-800 mt-1">${totalAnimals}</div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="bg-green-50 p-3 rounded-lg">
-                        <div class="text-green-800 text-xs font-medium">Today's Doses</div>
-                        <div class="text-green-600 text-2xl font-bold mt-1">${todaysRecords}</div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 card-hover">
+                        <div class="flex items-center">
+                            <div class="p-2 rounded-lg bg-green-50 text-green-600 mr-3">
+                                <i class="fas fa-syringe text-lg"></i>
+                            </div>
+                            <div>
+                                <div class="text-xs font-medium text-gray-500">Today's Doses</div>
+                                <div class="text-xl font-bold text-gray-800 mt-1">${todaysRecords}</div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="bg-purple-50 p-3 rounded-lg">
-                        <div class="text-purple-800 text-xs font-medium">Total Doses</div>
-                        <div class="text-purple-600 text-2xl font-bold mt-1">${totalAdministrations}</div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 card-hover">
+                        <div class="flex items-center">
+                            <div class="p-2 rounded-lg bg-purple-50 text-purple-600 mr-3">
+                                <i class="fas fa-vial text-lg"></i>
+                            </div>
+                            <div>
+                                <div class="text-xs font-medium text-gray-500">Total Doses</div>
+                                <div class="text-xl font-bold text-gray-800 mt-1">${totalAdministrations}</div>
+                            </div>
+                        </div>
                     </div>
                 `;
             }
@@ -527,22 +829,25 @@
                 const todaysDoses = animalRecords.filter(r => r.dateGiven === todayDate).length;
                 
                 // Create modal content
-                document.getElementById('modalTitle').textContent = `${animalId} - ${firstRecord.name}`;
+                document.getElementById('modalTitle').innerHTML = `
+                    <i class="fas fa-cow mr-2 text-indigo-600"></i>
+                    <span>${animalId} - ${firstRecord.name}</span>
+                `;
                 
                 let recordsHtml = animalRecords.map(record => `
-                    <div class="py-2 border-b last:border-0">
+                    <div class="py-3 border-b border-gray-100 last:border-0">
                         <div class="flex justify-between items-start">
-                            <div>
-                                <span class="font-medium">${formatDate(record.dateGiven)}</span>
-                                <span class="text-xs text-gray-500 ml-2">at ${record.timeGiven}</span>
+                            <div class="flex items-center">
+                                <span class="font-medium text-gray-800">${formatDate(record.dateGiven)}</span>
+                                <span class="text-xs text-gray-400 ml-2">at ${record.timeGiven}</span>
                             </div>
-                            <span class="text-xs ${getDaysPassed(record.datetimeGiven) > 30 ? 'text-green-600' : 'text-yellow-600'}">
+                            <span class="text-xs px-2 py-1 rounded-full ${getDaysPassed(record.datetimeGiven) > 30 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
                                 ${getDaysPassed(record.datetimeGiven)}d ago
                             </span>
                         </div>
-                        <div class="text-sm text-gray-600 mt-1">
+                        <div class="text-sm text-gray-600 mt-1 flex items-center">
                             <span class="font-medium">${record.semenType}</span>
-                            ${record.isRepeat ? '<span class="ml-2 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">Repeat</span>' : ''}
+                            ${record.isRepeat ? '<span class="ml-2 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">Repeat</span>' : ''}
                         </div>
                     </div>
                 `).join('');
@@ -550,35 +855,44 @@
                 document.getElementById('modalContent').innerHTML = `
                     <div class="space-y-4">
                         <div class="grid grid-cols-2 gap-3">
-                            <div class="bg-blue-50 p-3 rounded-lg">
-                                <div class="text-blue-800 text-xs font-medium">Total Doses</div>
-                                <div class="text-blue-600 text-xl font-bold mt-1">${animalRecords.length}</div>
+                            <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-sm card-hover">
+                                <div class="text-xs font-medium text-gray-500">Total Doses</div>
+                                <div class="text-xl font-bold text-gray-800 mt-1">${animalRecords.length}</div>
                             </div>
-                            <div class="bg-green-50 p-3 rounded-lg">
-                                <div class="text-green-800 text-xs font-medium">Today's Doses</div>
-                                <div class="text-green-600 text-xl font-bold mt-1">${todaysDoses}</div>
+                            <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-sm card-hover">
+                                <div class="text-xs font-medium text-gray-500">Today's Doses</div>
+                                <div class="text-xl font-bold text-gray-800 mt-1">${todaysDoses}</div>
                             </div>
                         </div>
                         
                         <div class="grid grid-cols-2 gap-3">
-                            <div class="bg-purple-50 p-3 rounded-lg">
-                                <div class="text-purple-800 text-xs font-medium">Repeat Doses</div>
-                                <div class="text-purple-600 text-xl font-bold mt-1">${repeatCount}</div>
+                            <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-sm card-hover">
+                                <div class="text-xs font-medium text-gray-500">Repeat Doses</div>
+                                <div class="text-xl font-bold text-gray-800 mt-1">${repeatCount}</div>
                             </div>
-                            <div class="bg-yellow-50 p-3 rounded-lg">
-                                <div class="text-yellow-800 text-xs font-medium">Days Since Last</div>
-                                <div class="text-yellow-600 text-xl font-bold mt-1">${daysSinceLast}</div>
+                            <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-sm card-hover">
+                                <div class="text-xs font-medium text-gray-500">Days Since Last</div>
+                                <div class="text-xl font-bold text-gray-800 mt-1">${daysSinceLast}</div>
                             </div>
                         </div>
                         
-                        <div class="bg-gray-50 p-3 rounded-lg">
-                            <div class="text-gray-800 text-xs font-medium">First Administration</div>
-                            <div class="text-gray-600 text-sm mt-1">${formatDate(firstRecord.dateGiven)} at ${firstRecord.timeGiven}</div>
+                        <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-sm card-hover">
+                            <div class="text-xs font-medium text-gray-500">First Administration</div>
+                            <div class="text-sm text-gray-600 mt-1 flex items-center">
+                                <i class="far fa-calendar mr-1 text-gray-400"></i>
+                                ${formatDate(firstRecord.dateGiven)} 
+                                <span class="mx-1 text-gray-300">|</span>
+                                <i class="far fa-clock mr-1 text-gray-400"></i>
+                                ${firstRecord.timeGiven}
+                            </div>
                         </div>
                         
                         <div>
-                            <h4 class="font-medium text-gray-800 mb-2">All Administrations</h4>
-                            <div class="max-h-60 overflow-y-auto">
+                            <h4 class="font-medium text-gray-800 mb-2 flex items-center">
+                                <i class="fas fa-history mr-2 text-indigo-600"></i>
+                                All Administrations
+                            </h4>
+                            <div class="max-h-60 overflow-y-auto border border-gray-100 rounded-lg">
                                 ${recordsHtml}
                             </div>
                         </div>
@@ -586,11 +900,21 @@
                 `;
                 
                 animalModal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
             }
             
             // Close modal
             closeModalBtn.addEventListener('click', function() {
                 animalModal.classList.add('hidden');
+                document.body.style.overflow = 'auto';
+            });
+            
+            // Close modal when clicking outside
+            animalModal.addEventListener('click', function(e) {
+                if (e.target === animalModal) {
+                    animalModal.classList.add('hidden');
+                    document.body.style.overflow = 'auto';
+                }
             });
             
             // Helper functions
@@ -607,15 +931,20 @@
             
             function showNotification(message, type = 'success') {
                 const notification = document.createElement('div');
-                notification.className = `fixed bottom-4 right-4 px-4 py-2 rounded-md shadow-md text-white ${
+                notification.className = `fixed bottom-4 right-4 px-4 py-3 rounded-lg shadow-lg text-white flex items-center ${
                     type === 'success' ? 'bg-green-500' : 'bg-red-500'
-                }`;
-                notification.textContent = message;
+                } animate__animated animate__fadeInUp`;
+                
+                const icon = type === 'success' ? 
+                    '<i class="fas fa-check-circle mr-2"></i>' : 
+                    '<i class="fas fa-exclamation-circle mr-2"></i>';
+                
+                notification.innerHTML = `${icon} ${message}`;
                 document.body.appendChild(notification);
                 
                 setTimeout(() => {
-                    notification.classList.add('opacity-0', 'transition-opacity', 'duration-300');
-                    setTimeout(() => notification.remove(), 300);
+                    notification.classList.add('animate__fadeOutDown');
+                    setTimeout(() => notification.remove(), 500);
                 }, 3000);
             }
             

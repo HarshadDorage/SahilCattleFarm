@@ -391,3 +391,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize default date/time
     setDefaultDateTime();
 });
+
+
+
+
+apiKey: "AIzaSyBmU_Emu1G37AWfUmlyT4411eX8Q8ACeLA",
+            authDomain: "sahilfarm-c73a1.firebaseapp.com",
+            projectId: "sahilfarm-c73a1",
+            storageBucket: "sahilfarm-c73a1.appspot.com",
+            messagingSenderId: "822562321775",
+            appId: "1:822562321775:web:ae7d6d559132623294a49a"
